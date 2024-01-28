@@ -34,9 +34,14 @@ fn get_question() -> String {
 
 #[query]
 
-fn get_votes() -> Option<Vec<VOTE>> {
-    let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
-    Some(borrowed_value)
+fn get_votes() -> Result<Vec<VOTE>, Error> {
+    let borrowed_value: Option<Vec<_>> = Some(MAP.with(|map| map.borrow().iter().collect()));
+    match borrowed_value {
+        Some(votes) => Ok(votes),
+        None => Err(Error::NotFound {
+            msg: format!("There are no votes for now!"),
+        }),
+    }
 }
 
 #[update]
@@ -45,10 +50,12 @@ fn vote(entry: String) {
     let matching_val: Vec<_> = borrowed_value.iter().filter(|val| val.0 == entry).collect();
     if matching_val.len() == 0 {
         MAP.with(|m| m.borrow_mut().insert(entry, 1));
-        //there is no such key so create it and add 1 vote
     }
 }
-
+#[derive(candid::CandidType)]
+enum Error {
+    NotFound { msg: String },
+}
 #[test]
 fn question_test() {
     let res = QUESTION.with(|q| q.borrow().to_string());
@@ -57,7 +64,6 @@ fn question_test() {
 }
 #[test]
 fn vote_for_new_languange_works() {
-    /** test for adding new lang */
     let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     let matching_val: Vec<_> = borrowed_value
         .iter()
