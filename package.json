@@ -16,7 +16,7 @@
     "deploy:ic": "dfx deploy --network=ic",
     "generate": "dfx generate yipyap_backend",
     "test": "cd src/yipyap_backend && cargo test",
-    "git": "git add . && git commit -m 'Remove redundant webpack config' && git push origin master"
+    "git": "git add . && git commit -m 'Remove redundant assets' && git push origin master"
   },
   "dependencies": {
     "@dfinity/agent": "^0.21.4",
