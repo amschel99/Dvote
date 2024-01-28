@@ -1,0 +1,30 @@
+{
+  "canisters": {
+    "yipyap_backend": {
+      "candid": "src/yipyap_backend/yipyap_backend.did",
+      "package": "yipyap_backend",
+      "type": "rust"
+    },
+    "yipyap_frontend": {
+      "dependencies": [
+        "yipyap_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/yipyap_frontend/src/index.html"
+      },
+      "source": [
+        "src/yipyap_frontend/assets",
+        "dist/yipyap_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
