@@ -35,8 +35,8 @@ fn get_question() -> String {
 #[query]
 
 fn get_votes() -> Result<Vec<VOTE>, Error> {
-    let borrowed_value: Option<Vec<_>> = Some(MAP.with(|map| map.borrow().iter().collect()));
-    match borrowed_value {
+    let votes_list: Option<Vec<_>> = Some(MAP.with(|map| map.borrow().iter().collect()));
+    match votes_list {
         Some(votes) => Ok(votes),
         None => Err(Error::NotFound {
             msg: format!("There are no votes for now!"),
@@ -63,16 +63,19 @@ fn reset_votes() -> Result<Vec<VOTE>, Error> {
     }
 }
 fn _vote(entry: String) -> Option<Vec<VOTE>> {
-    let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
-    let matching_val: Vec<_> = borrowed_value.iter().filter(|val| val.0 == entry).collect();
-    if matching_val.len() == 0 {
+    let votes_list: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
+    let matching_vote: Vec<_> = votes_list.iter().filter(|val| val.0 == entry).collect();
+    if matching_vote.len() == 0 {
         println!("called");
         MAP.with(|m| m.borrow_mut().insert(entry, 1));
         Some(MAP.with(|map| map.borrow().iter().collect()))
     } else {
-        let current_val = MAP.with(|m| m.borrow_mut().get(&entry));
+        let current_vote_count = MAP.with(|m| m.borrow_mut().get(&entry));
 
-        MAP.with(|m| m.borrow_mut().insert(entry, current_val.unwrap() + 1));
+        MAP.with(|m| {
+            m.borrow_mut()
+                .insert(entry, current_vote_count.unwrap() + 1)
+        });
         Some(MAP.with(|map| map.borrow().iter().collect()))
     }
 }
@@ -80,18 +83,10 @@ fn _vote(entry: String) -> Option<Vec<VOTE>> {
 fn _reset_votes() -> Option<Vec<VOTE>> {
     let reset_votes: Vec<_> = MAP.with(|map| {
         let map_ref = map.borrow_mut();
-        map_ref
-            .iter()
-            .map(|value| {
-                //  map.borrow_mut().insert(value.clone().0, 0);
-
-                (value.0, 0)
-            })
-            .collect()
+        map_ref.iter().map(|value| (value.0, 0)).collect()
     });
 
     reset_votes.iter().for_each(|vote| {
-        dbg!(&reset_votes);
         MAP.with(|m| m.borrow_mut().insert(vote.clone().0, 0));
     });
     Some(reset_votes)
