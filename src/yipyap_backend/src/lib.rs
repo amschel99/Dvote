@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, cell::RefCell};
+use std::cell::RefCell;
 
 use ic_cdk::{query, update};
 use ic_stable_structures::{
@@ -53,7 +53,15 @@ fn vote(entry: String) -> Result<Vec<VOTE>, Error> {
         }),
     }
 }
-
+#[update]
+fn reset_votes() -> Result<Vec<VOTE>, Error> {
+    match _reset_votes() {
+        Some(votes) => Ok(votes),
+        None => Err(Error::NotFound {
+            msg: format!("An error occured!"),
+        }),
+    }
+}
 fn _vote(entry: String) -> Option<Vec<VOTE>> {
     let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     let matching_val: Vec<_> = borrowed_value.iter().filter(|val| val.0 == entry).collect();
@@ -67,6 +75,26 @@ fn _vote(entry: String) -> Option<Vec<VOTE>> {
         MAP.with(|m| m.borrow_mut().insert(entry, current_val.unwrap() + 1));
         Some(MAP.with(|map| map.borrow().iter().collect()))
     }
+}
+
+fn _reset_votes() -> Option<Vec<VOTE>> {
+    let reset_votes: Vec<_> = MAP.with(|map| {
+        let map_ref = map.borrow_mut();
+        map_ref
+            .iter()
+            .map(|value| {
+                //  map.borrow_mut().insert(value.clone().0, 0);
+
+                (value.0, 0)
+            })
+            .collect()
+    });
+
+    reset_votes.iter().for_each(|vote| {
+        dbg!(&reset_votes);
+        MAP.with(|m| m.borrow_mut().insert(vote.clone().0, 0));
+    });
+    Some(reset_votes)
 }
 
 #[derive(candid::CandidType)]
@@ -95,4 +123,13 @@ fn vote_for_existing_languange_works() {
     let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
 
     assert_eq!(new_votes.get(0), Some(&("Motoko".to_string(), 2)));
+}
+
+#[test]
+fn reset_votes_works() {
+    _vote("Typescript".to_string());
+    _vote("Typescript".to_string());
+    _reset_votes();
+    let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
+    assert_eq!(new_votes.get(0), Some(&("Typescript".to_string(), 0)));
 }
