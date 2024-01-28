@@ -45,13 +45,30 @@ fn get_votes() -> Result<Vec<VOTE>, Error> {
 }
 
 #[update]
-fn vote(entry: String) {
+fn vote(entry: String) -> Result<Vec<VOTE>, Error> {
+    match _vote(entry) {
+        Some(votes) => Ok(votes),
+        None => Err(Error::NotFound {
+            msg: format!("An error occured!"),
+        }),
+    }
+}
+
+fn _vote(entry: String) -> Option<Vec<VOTE>> {
     let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     let matching_val: Vec<_> = borrowed_value.iter().filter(|val| val.0 == entry).collect();
     if matching_val.len() == 0 {
+        println!("called");
         MAP.with(|m| m.borrow_mut().insert(entry, 1));
+        Some(MAP.with(|map| map.borrow().iter().collect()))
+    } else {
+        let current_val = MAP.with(|m| m.borrow_mut().get(&entry));
+
+        MAP.with(|m| m.borrow_mut().insert(entry, current_val.unwrap() + 1));
+        Some(MAP.with(|map| map.borrow().iter().collect()))
     }
 }
+
 #[derive(candid::CandidType)]
 enum Error {
     NotFound { msg: String },
@@ -64,15 +81,18 @@ fn question_test() {
 }
 #[test]
 fn vote_for_new_languange_works() {
-    let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
-    let matching_val: Vec<_> = borrowed_value
-        .iter()
-        .filter(|val| val.0 == "Rust".to_string())
-        .collect();
-    if matching_val.len() == 0 {
-        MAP.with(|m| m.borrow_mut().insert("Rust".to_string(), 1));
-        let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
+    _vote("Rust".to_string());
 
-        assert_eq!(new_votes.get(0), Some(&("Rust".to_string(), 1)));
-    }
+    let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
+
+    assert_eq!(new_votes.get(0), Some(&("Rust".to_string(), 1)));
+}
+#[test]
+fn vote_for_existing_languange_works() {
+    _vote("Motoko".to_string());
+    _vote("Motoko".to_string());
+
+    let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
+
+    assert_eq!(new_votes.get(0), Some(&("Motoko".to_string(), 2)));
 }
