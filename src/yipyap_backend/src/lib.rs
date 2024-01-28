@@ -57,6 +57,7 @@ fn question_test() {
 }
 #[test]
 fn vote_for_new_languange_works() {
+    /** test for adding new lang */
     let borrowed_value: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     let matching_val: Vec<_> = borrowed_value
         .iter()
