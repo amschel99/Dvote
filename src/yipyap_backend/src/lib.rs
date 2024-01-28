@@ -66,7 +66,6 @@ fn _vote(entry: String) -> Option<Vec<VOTE>> {
     let votes_list: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     let matching_vote: Vec<_> = votes_list.iter().filter(|val| val.0 == entry).collect();
     if matching_vote.len() == 0 {
-        println!("called");
         MAP.with(|m| m.borrow_mut().insert(entry, 1));
         Some(MAP.with(|map| map.borrow().iter().collect()))
     } else {
