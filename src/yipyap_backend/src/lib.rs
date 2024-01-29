@@ -1,12 +1,14 @@
-use std::cell::RefCell;
+use std::{borrow::Cow, cell::RefCell};
 
+use candid::{Decode, Encode};
 use ic_cdk::{query, update};
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
-    BTreeMap, DefaultMemoryImpl,
+    BTreeMap, BoundedStorable, DefaultMemoryImpl, Storable,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
+
 
 type VOTE = (String, u32);
 
@@ -24,6 +26,21 @@ thread_local! {
     static QUESTION:RefCell<String>=RefCell::new(String::from("What is your favorite programming languange?"));
 
 
+}
+
+impl Storable for VOTE {
+    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
+        Cow::Owned(Encode!(self).unwrap())
+    }
+
+    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
+        Decode!(bytes.as_ref(), Self).unwrap()
+    }
+}
+
+impl BoundedStorable for VOTE {
+    const MAX_SIZE: u32 = 1024;
+    const IS_FIXED_SIZE: bool = false;
 }
 
 #[query]
@@ -127,3 +144,5 @@ fn reset_votes_works() {
     let new_votes: Vec<_> = MAP.with(|map| map.borrow().iter().collect());
     assert_eq!(new_votes.get(0), Some(&("Typescript".to_string(), 0)));
 }
+
+ic_cdk::export_candid!();
