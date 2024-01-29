@@ -4,7 +4,7 @@ use candid::{Decode, Encode};
 use ic_cdk::{query, update};
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
-    BTreeMap, BoundedStorable, DefaultMemoryImpl, Storable,
+    BTreeMap, DefaultMemoryImpl,
 };
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
@@ -25,21 +25,6 @@ thread_local! {
     static QUESTION:RefCell<String>=RefCell::new(String::from("What is your favorite programming languange?"));
 
 
-}
-
-impl Storable for VOTE {
-    fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
-        Cow::Owned(Encode!(self).unwrap())
-    }
-
-    fn from_bytes(bytes: std::borrow::Cow<[u8]>) -> Self {
-        Decode!(bytes.as_ref(), Self).unwrap()
-    }
-}
-
-impl BoundedStorable for VOTE {
-    const MAX_SIZE: u32 = 1024;
-    const IS_FIXED_SIZE: bool = false;
 }
 
 #[query]

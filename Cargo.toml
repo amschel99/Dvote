@@ -2,3 +2,4 @@
 members = [
     "src/yipyap_backend",
 ]
+resolver = "1"
