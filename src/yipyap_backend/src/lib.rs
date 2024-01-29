@@ -9,7 +9,6 @@ use ic_stable_structures::{
 
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-
 type VOTE = (String, u32);
 
 thread_local! {
