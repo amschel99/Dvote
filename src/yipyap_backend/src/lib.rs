@@ -1,17 +1,18 @@
 #[macro_use]
 extern crate serde;
-use std::{borrow::Cow, cell::RefCell, fmt::format};
-
-use candid::{Decode, Encode, Principal};
+use candid::Principal;
 use ic_cdk::{query, update};
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
     BTreeMap, Cell, DefaultMemoryImpl,
 };
+
+use std::cell::RefCell;
 mod article;
 mod user;
-use article::Article;
+use article::{Article, VOTE};
 use user::User;
+
 type Memory = VirtualMemory<DefaultMemoryImpl>;
 
 type IdCell = Cell<u64, Memory>;
@@ -74,10 +75,14 @@ fn _publish_article(content: String, user_principal: Principal) -> Option<Articl
             .collect()
     });
     let publisher = users.get(0).unwrap().1.principal;
+    let votes = VOTE {
+        count: 0,
+        principals: None,
+    };
     let article = Article {
         publisher,
         content,
-        votes: 0,
+        votes,
         id,
     };
     ARTICLES.with(|db| db.borrow_mut().insert(id, article))
@@ -102,12 +107,31 @@ fn get_single_writer(id: u64) -> Option<User> {
 
 fn upvote_article(id: u64) -> Option<Article> {
     let mut article = ARTICLES.with(|storage| storage.borrow().get(&id));
-    let rest_article = article.as_ref().unwrap().clone();
-    let new_article = Article {
-        votes: rest_article.votes + 1,
-        ..rest_article
-    };
-    article.replace(new_article)
+    let mut rest_article = article.as_ref().unwrap().clone();
+    let mut temp_principal_store = rest_article.clone().votes.principals.unwrap();
+
+    /*Check that a user does not vote twice */
+
+    let p: Vec<_> = rest_article
+        .clone()
+        .votes
+        .principals
+        .unwrap()
+        .into_iter()
+        .filter(|p| *p == ic_cdk::caller())
+        .collect();
+
+    if p.len() != 0 {
+        // RETURN NOTHING
+        None
+    } else {
+        temp_principal_store.push(ic_cdk::caller());
+
+        rest_article.votes.count += 1;
+        rest_article.votes.principals = Some(temp_principal_store);
+
+        article.replace(rest_article.clone())
+    }
 }
 
 fn delete_article(id: u64) -> String {
