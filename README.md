@@ -1,17 +1,14 @@
-# Dvote
+# Voix
 
-This simple backend canister allows people to vote for their favorite programming languange. 
-It has the following methods:
-1. ```get_votes()``` which returns a collection of votes.
-
-2. ```vote()``` which allows a user to vote for a languange.
-
-3. ```reset_votes()``` which resets the vote for each languange to 0.
-
-4. ```get_question()``` which returns the auestion to the user to fill in their favorite language
-
-I was inspired to build this by the Motoko tutorial by DFNITY which is  at https://internetcomputer.org/docs/current/tutorials/developer-journey/level-1/1.3-first-dapp
-
+This simple backend canister allows writers to signup and publish articles and also upvote articles from other writers. 
+1. Users can signup using their internet identity.
+2. users can publish articles
+3. Users can fetch articles from other writers.
+4. Users can fetch a specific article.
+5. Users can fetch other user profiles.
+6. Users can upvote an article only once.
+7. The owner of the article can delete the article.
+   
 
 
 ### Set up steps
