@@ -3,8 +3,6 @@ use std::borrow::Cow;
 use candid::{Decode, Encode, Principal};
 use ic_stable_structures::{BoundedStorable, Storable};
 
-use crate::article::Article;
-
 #[derive(candid::CandidType, Clone, Serialize, Deserialize)]
 pub struct User {
     pub principal: Principal,

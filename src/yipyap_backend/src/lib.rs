@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate serde;
 use candid::Principal;
-use ic_cdk::{query, update};
+
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
     BTreeMap, Cell, DefaultMemoryImpl,
@@ -40,7 +40,7 @@ thread_local! {
 
 
 }
-
+#[ic_cdk::update]
 fn _signup(name: Option<String>) -> String {
     let id = ID_COUNTER.with(|counter| {
         let counter_value = *counter.borrow().get();
@@ -60,7 +60,7 @@ fn _signup(name: Option<String>) -> String {
         name.unwrap_or_else(|| "No name was provided".to_string())
     )
 }
-
+#[ic_cdk::update]
 fn _publish_article(content: String, user_principal: Principal) -> Option<Article> {
     let id = ID_COUNTER.with(|counter| {
         let counter_value = *counter.borrow().get();
@@ -87,24 +87,26 @@ fn _publish_article(content: String, user_principal: Principal) -> Option<Articl
     };
     ARTICLES.with(|db| db.borrow_mut().insert(id, article))
 }
-
+#[ic_cdk::query]
 fn _get_all_articles() -> Vec<(u64, Article)> {
     let articles: Vec<_> = ARTICLES.with(|storage| storage.borrow().iter().collect());
     articles
 }
-
+#[ic_cdk::query]
 fn get_single_article(id: u64) -> Option<Article> {
     ARTICLES.with(|storage| storage.borrow().get(&id))
 }
+#[ic_cdk::query]
 
 fn get_all_writers() -> Vec<(u64, User)> {
     let writers: Vec<_> = USERS.with(|storage| storage.borrow().iter().collect());
     writers
 }
+#[ic_cdk::query]
 fn get_single_writer(id: u64) -> Option<User> {
     USERS.with(|storage| storage.borrow().get(&id))
 }
-
+#[ic_cdk::update]
 fn upvote_article(id: u64) -> Option<Article> {
     let mut article = ARTICLES.with(|storage| storage.borrow().get(&id));
     let mut rest_article = article.as_ref().unwrap().clone();
@@ -133,7 +135,7 @@ fn upvote_article(id: u64) -> Option<Article> {
         article.replace(rest_article.clone())
     }
 }
-
+#[ic_cdk::update]
 fn delete_article(id: u64) -> String {
     let article = get_single_article(id).unwrap();
     if article.publisher != ic_cdk::caller() {
