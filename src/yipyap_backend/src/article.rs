@@ -4,19 +4,12 @@ use candid::{Decode, Encode, Principal};
 use ic_stable_structures::{BoundedStorable, Storable};
 #[derive(candid::CandidType, Clone, Serialize, Deserialize)]
 pub struct Article {
-    publisher: Principal,
-    content: String,
-    votes: u128,
+    pub publisher: Principal,
+    pub content: String,
+    pub votes: u128,
+    pub id: u64,
 }
-impl Article {
-    pub fn new(content: String, publisher: Principal) -> Self {
-        Self {
-            content,
-            votes: 0,
-            publisher,
-        }
-    }
-}
+impl Article {}
 impl Storable for Article {
     fn to_bytes(&self) -> std::borrow::Cow<[u8]> {
         Cow::Owned(Encode!(self).unwrap())
