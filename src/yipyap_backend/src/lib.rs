@@ -61,7 +61,7 @@ fn _signup(name: Option<String>) -> String {
     )
 }
 #[ic_cdk::update]
-fn _publish_article(content: String, user_principal: Principal) -> Option<Article> {
+fn _publish_article(content: String, user_principal: Principal) -> Result<Article, Error> {
     let id = ID_COUNTER.with(|counter| {
         let counter_value = *counter.borrow().get();
         let _ = counter.borrow_mut().set(counter_value + 1);
@@ -85,7 +85,12 @@ fn _publish_article(content: String, user_principal: Principal) -> Option<Articl
         votes,
         id,
     };
-    ARTICLES.with(|db| db.borrow_mut().insert(id, article))
+    match ARTICLES.with(|db| db.borrow_mut().insert(id, article)) {
+        Some(article) => Ok(article),
+        None => Err(Error::NotFound {
+            msg: format!("Could not publish the article!"),
+        }),
+    }
 }
 #[ic_cdk::query]
 fn _get_all_articles() -> Vec<(u64, Article)> {
@@ -93,8 +98,13 @@ fn _get_all_articles() -> Vec<(u64, Article)> {
     articles
 }
 #[ic_cdk::query]
-fn get_single_article(id: u64) -> Option<Article> {
-    ARTICLES.with(|storage| storage.borrow().get(&id))
+fn get_single_article(id: u64) -> Result<Article, Error> {
+    match ARTICLES.with(|storage| storage.borrow().get(&id)) {
+        Some(article) => Ok(article),
+        None => Err(Error::NotFound {
+            msg: format!("That particular article was not found!"),
+        }),
+    }
 }
 #[ic_cdk::query]
 
@@ -103,11 +113,16 @@ fn get_all_writers() -> Vec<(u64, User)> {
     writers
 }
 #[ic_cdk::query]
-fn get_single_writer(id: u64) -> Option<User> {
-    USERS.with(|storage| storage.borrow().get(&id))
+fn get_single_writer(id: u64) -> Result<User, Error> {
+    match USERS.with(|storage| storage.borrow().get(&id)) {
+        Some(user) => Ok(user),
+        None => Err(Error::NotFound {
+            msg: format!("That particular user was not found!"),
+        }),
+    }
 }
 #[ic_cdk::update]
-fn upvote_article(id: u64) -> Option<Article> {
+fn upvote_article(id: u64) -> String {
     let mut article = ARTICLES.with(|storage| storage.borrow().get(&id));
     let mut rest_article = article.as_ref().unwrap().clone();
     let mut temp_principal_store = rest_article.clone().votes.principals.unwrap();
@@ -125,14 +140,15 @@ fn upvote_article(id: u64) -> Option<Article> {
 
     if p.len() != 0 {
         // RETURN NOTHING
-        None
+        "You can not upvote more than once".to_string()
     } else {
         temp_principal_store.push(ic_cdk::caller());
 
         rest_article.votes.count += 1;
         rest_article.votes.principals = Some(temp_principal_store);
 
-        article.replace(rest_article.clone())
+        article.replace(rest_article.clone());
+        "succesfully upvoted the article".to_string()
     }
 }
 #[ic_cdk::update]
@@ -145,3 +161,9 @@ fn delete_article(id: u64) -> String {
         format!("Article with ID {} deleted!", id)
     }
 }
+#[derive(candid::CandidType, Deserialize, Serialize, Debug)]
+enum Error {
+    NotFound { msg: String },
+}
+
+ic_cdk::export_candid!();
