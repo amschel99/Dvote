@@ -1,8 +1,21 @@
+type Article = record {
+  id : nat64;
+  content : text;
+  votes : VOTE;
+  publisher : principal;
+};
 type Error = variant { NotFound : record { msg : text } };
-type Result = variant { Ok : vec record { text; nat32 }; Err : Error };
+type Result = variant { Ok : Article; Err : Error };
+type Result_1 = variant { Ok : User; Err : Error };
+type User = record { id : nat64; "principal" : principal; name : opt text };
+type VOTE = record { count : nat64; principals : opt vec principal };
 service : {
-  get_question : () -> (text) query;
-  get_votes : () -> (Result) query;
-  reset_votes : () -> (Result);
-  vote : (text) -> (Result);
+  _get_all_articles : () -> (vec record { nat64; Article }) query;
+  _publish_article : (text, principal) -> (Result);
+  _signup : (opt text) -> (text);
+  delete_article : (nat64) -> (text);
+  get_all_writers : () -> (vec record { nat64; User }) query;
+  get_single_article : (nat64) -> (Result) query;
+  get_single_writer : (nat64) -> (Result_1) query;
+  upvote_article : (nat64) -> (text);
 }

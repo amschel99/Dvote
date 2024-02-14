@@ -2,7 +2,7 @@
   
   "scripts": {
     
-
+    "deploy": "./did.sh && dfx generate && dfx deploy -y",
     "test": "cd src/yipyap_backend && cargo test"
    
   }
