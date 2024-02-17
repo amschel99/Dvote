@@ -32,17 +32,22 @@ thread_local! {
             MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))),
         )
     );
-    static ID_COUNTER: RefCell<IdCell> = RefCell::new(
+    static USER_ID_COUNTER: RefCell<IdCell> = RefCell::new(
         IdCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
-            .expect("Cannot create a counter")
+            .expect("Cannot create a  user counter")
     );
+    static ARTICLE_ID_COUNTER: RefCell<IdCell> = RefCell::new(
+        IdCell::init(MEMORY_MANAGER.with(|m| m.borrow().get(MemoryId::new(0))), 0)
+            .expect("Cannot create am articles  counter")
+    );
+
 
 
 
 }
 #[ic_cdk::update]
 fn _signup(name: Option<String>) -> String {
-    let id = ID_COUNTER.with(|counter| {
+    let id = USER_ID_COUNTER.with(|counter| {
         let counter_value = *counter.borrow().get();
         let _ = counter.borrow_mut().set(counter_value + 1);
         counter_value
@@ -62,7 +67,7 @@ fn _signup(name: Option<String>) -> String {
 }
 #[ic_cdk::update]
 fn _publish_article(content: String, user_principal: Principal) -> Result<Article, Error> {
-    let id = ID_COUNTER.with(|counter| {
+    let id = ARTICLE_ID_COUNTER.with(|counter| {
         let counter_value = *counter.borrow().get();
         let _ = counter.borrow_mut().set(counter_value + 1);
         counter_value

@@ -8,6 +8,7 @@ This simple backend canister allows writers to signup and publish articles and a
 5. Users can fetch other user profiles.
 6. Users can upvote an article only once.
 7. The owner of the article can delete the article.
+
    
 
 
